@@ -10,8 +10,18 @@ import (
 
 type onlyCountry struct {
 	Country struct {
-		ISOCode string `maxminddb:"iso_code"`
+		ISOCode   string `maxminddb:"iso_code"`
+		GeonameID uint32 `maxminddb:"geoname_id"`
 	} `maxminddb:"country"`
+}
+
+type onlyCity struct {
+	City struct {
+		GeonameID uint32 `maxminddb:"geoname_id"`
+		Names     struct {
+			EnglishName string `maxminddb:"en"`
+		} `maxminddb:"names"`
+	} `maxminddb:"city"`
 }
 
 // This example shows how to decode to a struct
@@ -30,8 +40,29 @@ func ExampleReader_Lookup_struct() {
 		log.Fatal(err)
 	}
 	fmt.Print(record.Country.ISOCode)
+	fmt.Print(record.Country.GeonameID)
 	// Output:
-	// GB
+	// GB2635167
+}
+
+func ExampleReader_Lookup_city() {
+	db, err := maxminddb.Open("test-data/test-data/GeoIP2-City-Test.mmdb")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	ip := net.ParseIP("81.2.69.142")
+
+	var record onlyCity // Or any appropriate struct
+	err = db.Lookup(ip, &record)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(record.City.Names.EnglishName)
+	fmt.Print(record.City.GeonameID)
+	// Output:
+	// London2643743
 }
 
 // This example demonstrates how to decode to an interface{}
